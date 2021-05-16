@@ -21,7 +21,7 @@
 
 // === Domain model - fill in the blanks ===
 // There are 4 models: courses, lecturers, sections, reviews
-// There is one many-to-many relationship: courses <-> lecturers, which translates to two one-to-many relationships:
+// There is one many-to-many relationship: courses <-> l ecturers, which translates to two one-to-many relationships:
 // - One-to-many: courses -> sections
 // - One-to-many: lecturers -> sections
 // And one more one-to-many: sections -> reviews
@@ -70,6 +70,11 @@ exports.handler = async function(event) {
   // get the documents from the query
   let sections = sectionsQuery.docs
 
+  //create total rating parameters and set to 0 initially
+  let totalRating = 0
+  //create a parameter for total number of ratings and set it initially to 0
+  let totalNumberOfRatings = 0
+
   // loop through the documents
   for (let i=0; i < sections.length; i++) {
     // get the document ID of the section
@@ -77,7 +82,7 @@ exports.handler = async function(event) {
 
     // get the data from the section
     let sectionData = sections[i].data()
-    
+
     // create an Object to be added to the return value of our lambda
     let sectionObject = {}
 
@@ -94,11 +99,59 @@ exports.handler = async function(event) {
     returnValue.sections.push(sectionObject)
 
     // 🔥 your code for the reviews/ratings goes here
+
+    //set a new array as part of teh return value for teh reviews
+    returnValue.sections.reviews =[]  
+
+    //ask firebase for the reviews for teh section ID and lecturer ID we're curretnly going thru
+    let reviewQuery = await db.collection(`reviews`).where(`sectionId`,`==`, sectionId).get()
+
+    //get teh documents from teh query
+    let reviews = reviewQuery.docs
+    
+    //create a parameter for total rating and set it initially to 0
+    let totalSectionRating = 0
+
+    //create a loop to go through all the reviews for this section
+    for (let j=0; j<reviews.length; j++){
+
+    //get the data from teh returned document
+    let reviewsData = reviews[j].data()
+      
+    //create a new review object
+      let reviewObject = {}
+
+      //create new variables for rating and body and assign 
+      reviewObject.rating = reviewsData.rating
+      reviewObject.body = reviewsData.body
+
+    //add the review data including rating and body to teh review Object
+    returnValue.sections.reviews.push(reviewObject)
+
+    //find the number of reviews
+    let numberOfReviews = reviews.length
+
+    //add the rating to to the average section rating to the total course rating
+    totalSectionRating = totalSectionRating + reviewObject.rating
+    totalRating = totalRating + reviewObject.rating
+
+    //add this review to the total number of reviews
+    totalNumberOfRatings = totalNumberOfRatings + 1
   }
+
+    //calculate the average rating for the section
+    let averageSectionRating = totalSectionRating/reviews.length
+    console.log(`The average Rating for section #${i+1} is ${averageSectionRating}`)
+
+  }
+
+    // calculate the average rating of the course
+    AverageCourseRating = totalRating/totalNumberOfRatings
+    console.log(`The average rating for the whole course is ${AverageCourseRating}`)
 
   // return the standard response
   return {
     statusCode: 200,
-    body: JSON.stringify(returnValue)
+    body: JSON.stringify(returnValue.sections)
   }
 }
