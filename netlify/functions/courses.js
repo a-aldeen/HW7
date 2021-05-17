@@ -101,7 +101,7 @@ exports.handler = async function(event) {
     // 🔥 your code for the reviews/ratings goes here
 
     //set a new array as part of teh return value for teh reviews
-    returnValue.sections.reviews =[]  
+    returnValue.sections[i].reviews =[]  
 
     //ask firebase for the reviews for teh section ID and lecturer ID we're curretnly going thru
     let reviewQuery = await db.collection(`reviews`).where(`sectionId`,`==`, sectionId).get()
@@ -125,8 +125,9 @@ exports.handler = async function(event) {
       reviewObject.rating = reviewsData.rating
       reviewObject.body = reviewsData.body
 
+
     //add the review data including rating and body to teh review Object
-    returnValue.sections.reviews.push(reviewObject)
+    returnValue.sections[i].reviews.push(reviewObject)
 
     //find the number of reviews
     let numberOfReviews = reviews.length
@@ -137,21 +138,27 @@ exports.handler = async function(event) {
 
     //add this review to the total number of reviews
     totalNumberOfRatings = totalNumberOfRatings + 1
-  }
+  } // end for reviews
 
     //calculate the average rating for the section
     let averageSectionRating = totalSectionRating/reviews.length
     console.log(`The average Rating for section #${i+1} is ${averageSectionRating}`)
+    
+    // include the average section rating in the sections array
+    sectionObject.averageSectionRating  = averageSectionRating
 
-  }
+  } // end sections for
 
     // calculate the average rating of the course
-    AverageCourseRating = totalRating/totalNumberOfRatings
+    let  AverageCourseRating  = totalRating/totalNumberOfRatings
     console.log(`The average rating for the whole course is ${AverageCourseRating}`)
+
+    //include teh average course rating in hte return value
+    returnValue.AverageCourseRating  = AverageCourseRating
 
   // return the standard response
   return {
     statusCode: 200,
-    body: JSON.stringify(returnValue.sections)
+    body: JSON.stringify(returnValue)
   }
 }
