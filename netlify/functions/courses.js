@@ -73,7 +73,7 @@ exports.handler = async function(event) {
   //create total rating parameters and set to 0 initially
   let totalRating = 0
   //create a parameter for total number of ratings and set it initially to 0
-  let totalNumberOfRatings = 0
+  let totalNumberOfReviews = 0
 
   // loop through the documents
   for (let i=0; i < sections.length; i++) {
@@ -129,32 +129,31 @@ exports.handler = async function(event) {
     //add the review data including rating and body to teh review Object
     returnValue.sections[i].reviews.push(reviewObject)
 
-    //find the number of reviews
-    let numberOfReviews = reviews.length
 
-    //add the rating to to the average section rating to the total course rating
+    //add the rating to the average section rating and to the total course rating
     totalSectionRating = totalSectionRating + reviewObject.rating
     totalRating = totalRating + reviewObject.rating
 
     //add this review to the total number of reviews
-    totalNumberOfRatings = totalNumberOfRatings + 1
-  } // end for reviews
+    totalNumberOfReviews = totalNumberOfReviews + 1
+  } // end loop for reviews
 
     //calculate the average rating for the section
     let averageSectionRating = totalSectionRating/reviews.length
     console.log(`The average Rating for section #${i+1} is ${averageSectionRating}`)
     
-    // include the average section rating in the sections array
+    // include the average section rating and number of reviews in the sections array
     sectionObject.averageSectionRating  = averageSectionRating
-
+    sectionObject.numberOfSectionReviews = reviews.length
   } // end sections for
 
     // calculate the average rating of the course
-    let  AverageCourseRating  = totalRating/totalNumberOfRatings
+    let  AverageCourseRating  = totalRating/totalNumberOfReviews
     console.log(`The average rating for the whole course is ${AverageCourseRating}`)
 
-    //include teh average course rating in hte return value
+    //include teh average course rating and number of reviews in hte return value
     returnValue.AverageCourseRating  = AverageCourseRating
+    returnValue.numberOfCourseReviews = totalNumberOfReviews
 
   // return the standard response
   return {
