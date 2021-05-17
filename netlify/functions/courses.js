@@ -35,7 +35,7 @@
 let firebase = require(`./firebase`)
 
 // /.netlify/functions/courses?courseNumber=KIEI-451
-exports.handler = async function(event) {
+exports.handler = async function (event) {
 
   // get the course number being requested
   let courseNumber = event.queryStringParameters.courseNumber
@@ -76,7 +76,7 @@ exports.handler = async function(event) {
   let totalNumberOfReviews = 0
 
   // loop through the documents
-  for (let i=0; i < sections.length; i++) {
+  for (let i = 0; i < sections.length; i++) {
     // get the document ID of the section
     let sectionId = sections[i].id
 
@@ -101,24 +101,24 @@ exports.handler = async function(event) {
     // 🔥 your code for the reviews/ratings goes here
 
     //set a new array as part of teh return value for teh reviews
-    returnValue.sections[i].reviews =[]  
+    returnValue.sections[i].reviews = []
 
     //ask firebase for the reviews for teh section ID and lecturer ID we're curretnly going thru
-    let reviewQuery = await db.collection(`reviews`).where(`sectionId`,`==`, sectionId).get()
+    let reviewQuery = await db.collection(`reviews`).where(`sectionId`, `==`, sectionId).get()
 
     //get teh documents from teh query
     let reviews = reviewQuery.docs
-    
+
     //create a parameter for total rating and set it initially to 0
     let totalSectionRating = 0
 
     //create a loop to go through all the reviews for this section
-    for (let j=0; j<reviews.length; j++){
+    for (let j = 0; j < reviews.length; j++) {
 
-    //get the data from teh returned document
-    let reviewsData = reviews[j].data()
-      
-    //create a new review object
+      //get the data from teh returned document
+      let reviewsData = reviews[j].data()
+
+      //create a new review object
       let reviewObject = {}
 
       //create new variables for rating and body and assign 
@@ -126,34 +126,38 @@ exports.handler = async function(event) {
       reviewObject.body = reviewsData.body
 
 
-    //add the review data including rating and body to teh review Object
-    returnValue.sections[i].reviews.push(reviewObject)
+      //add the review data including rating and body to teh review Object
+      returnValue.sections[i].reviews.push(reviewObject)
 
 
-    //add the rating to the average section rating and to the total course rating
-    totalSectionRating = totalSectionRating + reviewObject.rating
-    totalRating = totalRating + reviewObject.rating
+      //add the rating to the average section rating and to the total course rating
+      totalSectionRating = totalSectionRating + reviewObject.rating
+      totalRating = totalRating + reviewObject.rating
 
-    //add this review to the total number of reviews
-    totalNumberOfReviews = totalNumberOfReviews + 1
-  } // end loop for reviews
+      //add this review to the total number of reviews
+      totalNumberOfReviews = totalNumberOfReviews + 1
+    } // end loop for reviews
 
     //calculate the average rating for the section
-    let averageSectionRating = totalSectionRating/reviews.length
-    console.log(`The average Rating for section #${i+1} is ${averageSectionRating}`)
-    
-    // include the average section rating and number of reviews in the sections array
-    sectionObject.averageSectionRating  = averageSectionRating
+    let averageSectionRating = totalSectionRating / reviews.length
+
+    // Log the average section rating - numbering each section starting with section #1
+    console.log(`The average Rating for section #${i + 1} is ${averageSectionRating}`)
+
+    // Include the average section rating and number of reviews in the sections array
+    sectionObject.averageSectionRating = averageSectionRating
     sectionObject.numberOfSectionReviews = reviews.length
   } // end sections for
 
-    // calculate the average rating of the course
-    let  AverageCourseRating  = totalRating/totalNumberOfReviews
-    console.log(`The average rating for the whole course is ${AverageCourseRating}`)
+  // calculate the average rating of the course
+  let AverageCourseRating = totalRating / totalNumberOfReviews
 
-    //include teh average course rating and number of reviews in hte return value
-    returnValue.AverageCourseRating  = AverageCourseRating
-    returnValue.numberOfCourseReviews = totalNumberOfReviews
+  //Log the average course rating
+  console.log(`The average rating for the whole course is ${AverageCourseRating}`)
+
+  //Include teh average course rating and number of reviews in hte return value
+  returnValue.AverageCourseRating = AverageCourseRating
+  returnValue.numberOfCourseReviews = totalNumberOfReviews
 
   // return the standard response
   return {
